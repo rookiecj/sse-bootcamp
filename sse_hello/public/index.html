@@ -5,14 +5,47 @@
     <title>Sse Event</title>
 </head>
 <body>
-<div id="sse-data"></div>
+
+<button>Close the connection</button>
+
+<div id="sse-data">
+</div>
 
 <script>
-    const eventSource = new EventSource('http://localhost:8080/events');
-    eventSource.onmessage = function(event) {
-        const dataElement = document.getElementById('sse-data');
-        dataElement.innerHTML += event.data + '<br>';
+    const button = document.querySelector('button');
+    const evtSource = new EventSource('/sse-events');
+    console.log('credentials', evtSource.withCredentials);
+    console.log('readyState', evtSource.readyState);
+    console.log('url', evtSource.url);
+
+
+    const eventData = document.getElementById('sse-data');
+
+    evtSource.onopen = function() {
+        console.log("Connection to server opened.");
+        eventData.innerHTML = 'Connection to server opened.';
     };
+
+    evtSource.onmessage = function(e) {
+        // const newElement = document.createElement("li");
+
+        // newElement.textContent = "message: " + e.data;
+        // eventList.appendChild(newElement);
+        console.log('data', e.data);
+        eventData.innerHTML = e.data;
+    };
+
+    evtSource.onerror = function() {
+        console.log("EventSource failed.");
+    };
+
+    button.onclick = function() {
+        console.log('Connection closed');
+        evtSource.close();
+    };
+
 </script>
+
+
 </body>
 </html>
