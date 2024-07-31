@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -17,7 +18,7 @@ func main() {
 
 func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 	// 현재 client의 ip 정보를 출력한다.
-	fmt.Printf("Connected: %s\n", r.RemoteAddr)
+	log.Printf("Connected: %s\n", r.RemoteAddr)
 	//fmt.Println(r.UserAgent())
 
 	// CORS(Cross-Origin Resource Sharing)를 사용하려면 다음 헤더를 설정한다.
@@ -29,8 +30,8 @@ func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	//w.Header().Set("Connection", "keep-alive")
 
-	// 30초간 1초마다 현재시간을 내보낸다.
-	for i := 0; i < 30; i++ {
+	// 1초마다 현재시간을 내보낸다.
+	for i := 0; i < 10; i++ {
 		now := time.Now()
 		nowStr := now.Format("2006-01-02 15:04:05")
 		data := fmt.Sprintf("data: %s\n", nowStr)
@@ -42,5 +43,16 @@ func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 	closeNotify := w.(http.CloseNotifier).CloseNotify()
 	<-closeNotify
 
-	fmt.Printf("Closed: %s\n", r.RemoteAddr)
+	log.Printf("Client Closed: %s\n", r.RemoteAddr)
 }
+
+// page를 refresh할때마다 새로운 connection이 연결된다.
+//2024/08/01 01:14:49 Connected: [::1]:64727
+//2024/08/01 01:14:55 Connected: [::1]:64749
+//2024/08/01 01:14:56 Connected: [::1]:64754
+//2024/08/01 01:14:57 Connected: [::1]:64759
+//2024/08/01 01:14:59 Client Closed: [::1]:64727
+//2024/08/01 01:15:05 Client Closed: [::1]:64749
+//2024/08/01 01:15:06 Client Closed: [::1]:64754
+// 마지막은 connection을 명시적으로 close한 경우이다.
+//2024/08/01 01:15:14 Client Closed: [::1]:64759
