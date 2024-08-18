@@ -31,14 +31,24 @@ func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Connection", "keep-alive")
 
 	// 1초마다 현재시간을 내보낸다.
-	for i := 0; i < 10; i++ {
-		now := time.Now()
-		nowStr := now.Format("2006-01-02 15:04:05")
-		data := fmt.Sprintf("data: %s\n", nowStr)
-		fmt.Fprintf(w, "%s\n\n", data)
-		time.Sleep(1 * time.Second)
-		w.(http.Flusher).Flush()
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		return
 	}
+
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		id := 0
+		for t := range ticker.C {
+			nowStr := t.Format("2006-01-02 15:04:05")
+			// SSE format
+			data := fmt.Sprintf("id: %d\ndata: %s\n", id, nowStr)
+			fmt.Fprintf(w, "%s\n\n", data)
+			flusher.Flush()
+			id++
+		}
+	}()
 
 	closeNotify := w.(http.CloseNotifier).CloseNotify()
 	<-closeNotify

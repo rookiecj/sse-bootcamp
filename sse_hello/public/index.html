@@ -45,7 +45,7 @@
     };
 
     evtSource.onmessage = function(e) {
-        console.log('data', e.data);
+        console.log('event', e);
         eventData.innerHTML = e.data;
 
         // parse date string '2024-08-01 01:35:12'
