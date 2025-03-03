@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Sse Event</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:900" rel="stylesheet">
     <link rel="stylesheet"  href="styles.css">
 
@@ -29,11 +30,16 @@
 </div> <!-- col -->
 
 <script>
+    // 현재 페이지의 path에서 prefix 추출
+    const currentPath = window.location.pathname;
+    const prefix = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    
     const button = document.querySelector('button');
-    const evtSource = new EventSource('/sse-events');
+    // app/sse-hello/sse-events
+    const evtSource = new EventSource(prefix + '/sse-events');
+    console.log('SSE URL:', evtSource.url);
     console.log('credentials', evtSource.withCredentials);
     console.log('readyState', evtSource.readyState);
-    console.log('url', evtSource.url);
 
 
     const eventData = document.getElementById('digitalclock');
