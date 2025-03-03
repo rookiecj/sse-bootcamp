@@ -28,7 +28,7 @@ COPY --from=builder /build/app .
 COPY --from=builder /build/public ./public
 
 # 기본 prefix 설정
-ENV URL_PATH_PREFIX=/app/sse-hello
+# ENV URL_PATH_PREFIX=/app/sse-hello
 
 EXPOSE 8080
 

@@ -41,7 +41,7 @@ REGISTRY_HOST ?= your_registry_host
 REGISTRY_USERNAME ?= your_ci_bot_name
 REGISTRY_PASSWORD ?= your_ci_bot_password
 
-IMAGE_TAG ?= 1.6
+IMAGE_TAG ?= 1.7
 URL_PATH_PREFIX ?= app/sse-hello
 
 .PHONY: docker-setup-builder

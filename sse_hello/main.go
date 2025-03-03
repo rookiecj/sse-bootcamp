@@ -16,7 +16,7 @@ func main() {
 	fs := http.FileServer(http.Dir("public"))
 	if URL_PATH_PREFIX != "" {
 		// prefix가 있는 경우 StripPrefix 사용
-		http.Handle(URL_PATH_PREFIX+"/", http.StripPrefix(URL_PATH_PREFIX, fs))
+		http.Handle("/", http.StripPrefix(URL_PATH_PREFIX, fs))
 	} else {
 		// prefix가 없는 경우 루트에서 서비스
 		http.Handle("/", fs)
@@ -61,14 +61,15 @@ func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		id := 0
 		for t := range ticker.C {
-			nowStr := t.Format("2006-01-02 15:04:05")
+			// RFC3339 형식으로 시간을 포맷팅 (timezone 포함)
+			nowStr := t.Format(time.RFC3339)
+			fmt.Println("now", nowStr)
 			// SSE format
 			data := fmt.Sprintf("id: %d\ndata: %s\n", id, nowStr)
 			fmt.Fprintf(w, "%s\n\n", data)
 			if flusher != nil {
 				flusher.Flush()
 			} else {
-				//fmt.Println("flusher is nil")
 				break
 			}
 			id++
