@@ -22,6 +22,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug Secrets
+        run: |
+          echo "HARBOR_ROBOT_USERNAME is set: ${{ secrets.HARBOR_ROBOT_USERNAME != '' }}"
+          echo "HARBOR_ROBOT_TOKEN is set: ${{ secrets.HARBOR_ROBOT_TOKEN != '' }}"
+
       - name: Log in to Harbor
         uses: docker/login-action@v3
         with:
