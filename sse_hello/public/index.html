@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Sse Event</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:900" rel="stylesheet">
     <link rel="stylesheet"  href="styles.css">
 
@@ -22,79 +23,96 @@
     </div>
 
     <!--일자, 시간을 표시하는 디지털 시계 모양 -->
-    <div id="digitalclock" style="font-size: 22px"></div>
+    <div class="digitalclock">
+        <div class="date"></div>
+        <div class="time"></div>
+    </div>
+
+    <div class="connection-status"></div>
 
     <button>Close the connection</button>
 
 </div> <!-- col -->
 
 <script>
+    // 현재 페이지의 path에서 prefix 추출
+    const currentPath = window.location.pathname;
+    const prefix = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    
     const button = document.querySelector('button');
-    const evtSource = new EventSource('/sse-events');
+    // app/sse-hello/sse-events
+    const evtSource = new EventSource(prefix + '/sse-events');
+    console.log('SSE URL:', evtSource.url);
     console.log('credentials', evtSource.withCredentials);
     console.log('readyState', evtSource.readyState);
-    console.log('url', evtSource.url);
 
 
-    const eventData = document.getElementById('digitalclock');
+    const eventData = document.querySelector('.connection-status');
 
     evtSource.onopen = function() {
         console.log("Connection to server opened.");
-        eventData.innerHTML = 'Connection to server opened.';
+        eventData.textContent = 'Connection to server opened';
+        eventData.className = 'connection-status connected';
         parseAndShowDate(new Date());
     };
 
     evtSource.onmessage = function(e) {
         console.log('event', e);
-        eventData.innerHTML = e.data;
-
-        // parse date string '2024-08-01 01:35:12'
+        // RFC3339 형식의 시간 문자열을 파싱
         const date = new Date(e.data);
         parseAndShowDate(date);
     };
 
     evtSource.onerror = function() {
         console.log("EventSource failed.");
-        eventData.innerHTML = 'EventSource failed.';
+        eventData.textContent = 'Connection failed';
+        eventData.className = 'connection-status error';
     };
 
     button.onclick = function() {
         console.log('Connection closed');
         evtSource.close();
-        eventData.innerHTML = 'Connection closed';
+        eventData.textContent = 'Connection closed';
+        eventData.className = 'connection-status closed';
     };
 
 
     function parseAndShowDate(dateString) {
+        // console.log('dateString', dateString);
         const date = new Date(dateString);
         digitalClock(date);
         analogClock(date);
     }
 
     function analogClock(date) {
-
         const hours = ((date.getHours() + 11) % 12 + 1);
         const minutes = date.getMinutes();
         const seconds = date.getSeconds();
 
-        const hour = hours * 30;
-        const minute = minutes * 6;
-        const second = seconds * 6;
+        // 시침은 1시간당 30도(360/12), 1분당 0.5도(30/60) 회전
+        const hourDegree = (hours * 30) + (minutes * 0.5);
+        // 분침은 1분당 6도(360/60), 1초당 0.1도(6/60) 회전
+        const minuteDegree = (minutes * 6) + (seconds * 0.1);
+        const secondDegree = seconds * 6;
 
-        document.querySelector('.hour').style.transform = `rotate(${hour}deg)`
-        document.querySelector('.minute').style.transform = `rotate(${minute}deg)`
-        document.querySelector('.second').style.transform = `rotate(${second}deg)`
+        document.querySelector('.hour').style.transform = `rotate(${hourDegree}deg)`
+        document.querySelector('.minute').style.transform = `rotate(${minuteDegree}deg)`
+        document.querySelector('.second').style.transform = `rotate(${secondDegree}deg)`
     }
 
     function digitalClock(date) {
         const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        const seconds = date.getSeconds();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
 
-        document.getElementById('digitalclock').innerHTML = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        const dateStr = `${year}-${month}-${day}`;
+        const timeStr = `${hours}:${minutes}:${seconds}`;
+
+        document.querySelector('.digitalclock .date').textContent = dateStr;
+        document.querySelector('.digitalclock .time').textContent = timeStr;
     }
 
 </script>

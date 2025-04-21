@@ -4,15 +4,30 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 func main() {
+	// 환경변수에서 prefix를 가져옴 (기본값: "")
+	URL_PATH_PREFIX := os.Getenv("URL_PATH_PREFIX")
+	
+	// 정적 파일 서버 설정
+	fs := http.FileServer(http.Dir("public"))
+	if URL_PATH_PREFIX != "" {
+		// prefix가 있는 경우 StripPrefix 사용
+		http.Handle("/", http.StripPrefix(URL_PATH_PREFIX, fs))
+	} else {
+		// prefix가 없는 경우 루트에서 서비스
+		http.Handle("/", fs)
+	}
 
-	http.Handle("/", http.FileServer(http.Dir("./public")))
+	// SSE 이벤트 핸들러 설정
+	ssePath := URL_PATH_PREFIX + "/sse-events"
+	fmt.Printf("SSE path: %s\n", ssePath)
+	http.HandleFunc(ssePath, sseEventsHandler)
 
-	// '/events'는 event source
-	http.HandleFunc("/sse-events", sseEventsHandler)
+	fmt.Printf("Server starting on :8080 with URL_PATH_PREFIX: %s\n", URL_PATH_PREFIX)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -36,18 +51,31 @@ func sseEventsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
 	}
+	defer func() {
+		flusher.Flush()
+		flusher = nil
+		fmt.Println("flusher is nil")
+	}()
 
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		id := 0
 		for t := range ticker.C {
-			nowStr := t.Format("2006-01-02 15:04:05")
+			// RFC3339 형식으로 시간을 포맷팅 (timezone 포함)
+			nowStr := t.Format(time.RFC3339)
+			fmt.Println("now", nowStr)
 			// SSE format
 			data := fmt.Sprintf("id: %d\ndata: %s\n", id, nowStr)
 			fmt.Fprintf(w, "%s\n\n", data)
-			flusher.Flush()
+			if flusher != nil {
+				flusher.Flush()
+			} else {
+				break
+			}
 			id++
 		}
+		ticker.Stop()
+		fmt.Println("ticker closed")
 	}()
 
 	closeNotify := w.(http.CloseNotifier).CloseNotify()
