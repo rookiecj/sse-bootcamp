@@ -26,7 +26,11 @@ jobs:
         run: |
           echo "HARBOR_ROBOT_USERNAME is set: ${{ secrets.HARBOR_ROBOT_USERNAME != '' }}"
           echo "HARBOR_ROBOT_TOKEN is set: ${{ secrets.HARBOR_ROBOT_TOKEN != '' }}"
-
+          echo "HARBOR_ROBOT_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME != '' }}"
+          echo "HARBOR_ROBOT_TOKEN: ${{ secrets.HARBOR_ROBOT_TOKEN != '' }}"
+          echo "Registry: ${{ env.REGISTRY }}"
+          echo "Image Name: ${{ env.IMAGE_NAME }}"
+          
       - name: Log in to Harbor
         uses: docker/login-action@v3
         with:
