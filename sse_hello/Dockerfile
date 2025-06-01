@@ -25,7 +25,11 @@ WORKDIR /app
 
 # Copy the binary and static files from builder
 COPY --from=builder /build/app .
+# Copy static files and templates if needed
 COPY --from=builder /build/public ./public
+COPY --from=builder /build/static ./static
+
+
 
 # 기본 prefix 설정
 # ENV URL_PATH_PREFIX=/app/sse-hello
