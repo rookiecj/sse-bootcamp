@@ -3,9 +3,6 @@ name: Docker Build and Push
 on:
   push:
     branches: [main]
-    paths:
-      - "Dockerfile"
-      - ".github/workflows/docker-push.yml"
 
 jobs:
   build-and-push:
